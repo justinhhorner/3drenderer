@@ -15,7 +15,7 @@ uint32_t* color_buffer = NULL;
 
 bool initialize_window(void) {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        fprintf(stderr, "Error iniitalizing SDL.\n");
+        fprintf(stderr, "Error initializing SDL.\n");
         return false;
     }
 

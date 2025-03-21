@@ -99,7 +99,13 @@ void update(void) {
 
 void clear_color_buffer(uint32_t color) {
     for (int i = 0; i < (window_width * window_height); i++) {
-        color_buffer[i] = color;
+        bool is_row = i / window_width % 10 == 0;
+        bool is_column = i % 10 == 0;
+        if (is_row || is_column) {
+            color_buffer[i] = 0xFF000000;
+        } else {
+            color_buffer[i] = color;
+        }
     }
 }
 

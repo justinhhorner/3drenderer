@@ -1,3 +1,4 @@
 ﻿  main.c
-C:\Dev\3drenderer\src\main.c(138,10): warning C4026: function declared with formal parameter list
+C:\Dev\3drenderer\src\main.c(24,22): warning C4090: 'initializing': different 'const' qualifiers
+C:\Dev\3drenderer\src\main.c(148,10): warning C4026: function declared with formal parameter list
   MSVS.vcxproj -> C:\Dev\3drenderer\msvs\Debug\MSVS.exe

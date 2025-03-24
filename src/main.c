@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -14,37 +15,45 @@ int window_height = 600;
 uint32_t* color_buffer = NULL;
 
 bool initialize_window(void) {
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        fprintf(stderr, "Error initializing SDL.\n");
+    if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
+        SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return false;
     }
 
-    SDL_DisplayMode display_mode;
-    SDL_GetCurrentDisplayMode(0, &display_mode);
+    SDL_DisplayID* displays = SDL_GetDisplays(NULL);
+    SDL_DisplayMode* display_mode = SDL_GetCurrentDisplayMode(displays[0]);
+    if (!display_mode)
+    {
+        SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+        return false;
+    }
+    window_width = display_mode->w;
+    window_height = display_mode->h;
 
-    window_width = display_mode.w;
-    window_height = display_mode.h;
+    SDL_PropertiesID window_properties = SDL_CreateProperties();
+    if (!window_properties)
+    {
+        SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+        return false;
+    }
 
-    window = SDL_CreateWindow(
-        NULL,
-        SDL_WINDOWPOS_CENTERED, 
-        SDL_WINDOWPOS_CENTERED,
-        window_width,
-        window_height,
-        0
-    );
+    SDL_SetNumberProperty(window_properties, SDL_PROP_WINDOW_CREATE_X_NUMBER, SDL_WINDOWPOS_CENTERED);
+    SDL_SetNumberProperty(window_properties, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED);
+    SDL_SetNumberProperty(window_properties, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, window_width);
+    SDL_SetNumberProperty(window_properties, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, window_height);
+    window = SDL_CreateWindowWithProperties(window_properties);
     if (!window) {
-        fprintf(stderr, "Error creating window");
+        SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
         return false;
     }
 
-    renderer = SDL_CreateRenderer(window, -1, 0);
+    renderer = SDL_CreateRenderer(window, NULL);
     if (!renderer) {
-        fprintf(stderr, "Error creating renderer");
+        SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
         return false;
     }
 
-    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+    SDL_SetWindowFullscreen(window, true);
 
     return true;
 }
@@ -74,6 +83,7 @@ void destroy_window(void) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_DestroyTexture(color_buffer_texture);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
     SDL_Quit();
 }
 
@@ -82,11 +92,11 @@ void process_input(void) {
     SDL_PollEvent(&event);
 
     switch (event.type) {
-        case SDL_QUIT:
+        case SDL_EVENT_QUIT:
             is_running = false;
             break;
-        case SDL_KEYDOWN:
-            if (event.key.keysym.sym == SDLK_ESCAPE)
+        case SDL_EVENT_KEY_DOWN:
+            if (event.key.key == SDLK_ESCAPE)
                 is_running = false;
             break;
 
@@ -117,7 +127,7 @@ void render_color_buffer() {
         (int)(window_width * sizeof(uint32_t))
     );
 
-    SDL_RenderCopy(
+    SDL_RenderTexture(
         renderer,
         color_buffer_texture,
         NULL,

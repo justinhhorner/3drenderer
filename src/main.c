@@ -99,13 +99,7 @@ void update(void) {
 
 void clear_color_buffer(uint32_t color) {
     for (int i = 0; i < (window_width * window_height); i++) {
-        bool is_row = i / window_width % 10 == 0;
-        bool is_column = i % 10 == 0;
-        if (is_row || is_column) {
-            color_buffer[i] = 0xFF000000;
-        } else {
-            color_buffer[i] = color;
-        }
+        color_buffer[i] = color;
     }
 }
 
@@ -125,11 +119,29 @@ void render_color_buffer() {
     );
 }
 
+void draw_grid(int gutter, int color) {
+    for (int y = gutter; y < window_height; y += gutter) {
+        for (int x = gutter; x < window_width; x += gutter) {
+            color_buffer[window_width * y + x] = color;
+        }
+    }
+}
+
+void draw_rect(int x, int y, int w, int h, int color) {
+    for (int i = y; i < y + h; i++) {
+        for (int j = x; j < x + w; j++) {
+            color_buffer[window_width * i + j] = color;
+        }
+    }
+}
+
 void render(void) {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    clear_color_buffer(0xFFFFFF00);
+    clear_color_buffer(0xFF000000);
+    draw_grid(10, 0xFF333333);
+    draw_rect(300, 200, 300, 200, 0xFFFF00FF);
     render_color_buffer();
 
     SDL_RenderPresent(renderer);
